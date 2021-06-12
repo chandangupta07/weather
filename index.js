@@ -1,6 +1,7 @@
 require('dotenv').config()
 const express = require("express");
 const bodyParser = require("body-parser");
+const mongoose = require("mongoose");
 const request = require('request');
 const app = express();
 
@@ -21,38 +22,15 @@ app.all('/*', function (req, res, next) {
 });
 app.use(loggerMiddleware);
 
+/**Setting Mongo Connection */
+mongoose.connect(process.env.MONGO_DB, {
+    useUnifiedTopology: true,
+    useCreateIndex: true,
+    useNewUrlParser: true,
+});
 
 /**Setting Router */
-app.get('/test', async (req, res) => {
-    try {
-        let city = 'portland';
-        let results = {
-            id: 1,
-            name: "chandan",
-            url: `http://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${process.env.API_KEY}`
-        }
-        return res.status(200).json({ data: results });
-    } catch (e) {
-        return res.status(500).json({ errors: "err" });
-    }
-});
-
-app.post('/search', async (req, res) => {
-    try {
-        if (!req.body.city) return res.status(200).json({ err: "city is missing" });
-        let city = req.body.city;
-        let url = `http://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${process.env.API_KEY}`
-        request(url, function (err, response, body) {
-            if (err) {
-                return res.status(500).json({ errors: "Something Went Wrong Enter Coreect City" });
-            } else {
-                let weather = JSON.parse(body)
-                return res.status(200).json({ data: weather });
-            }
-        });
-    } catch (e) {
-        return res.status(500).json({ errors: "Internal server error" });
-    }
-});
+var router = require("./routes/router");
+app.use(router);
 
 module.exports = app;
